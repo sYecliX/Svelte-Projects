@@ -54,7 +54,7 @@
       <div class="card">
         <div class="front">
           <h3>{cardInfo.cardNumber}</h3>
-          <p class:visible={isCardHolderNameVisible}>Card Holder Name</p>
+          <p class:visible={isCardHolderNameVisible}>Card Holder Name v2</p>
           <p>{cardInfo.name ? cardInfo.name : "****"}</p>
           <p class:visible={isExpiryDateVisible}>Expiry Date</p>
           <p>{cardInfo.expirationDate}</p>
