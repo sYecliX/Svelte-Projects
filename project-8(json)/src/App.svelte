@@ -1,66 +1,104 @@
 <script>
-  import { onMount } from "svelte";
-
-   let users = [{ name:"Veriler Yükleniyor ...",email:""}]
-   let id, name,email
-   let control = false
-   let userId
-
-   function addUser(){
-    users.forEach((x)=>{
-        id = x.id
-    })
-    let obj = {id:id+1,name, email}
-    users.push(obj)
-    getAll()
-   }
-
-   function editUser(id){
-   users.forEach((data)=>{
-    if(data.id == id){
-       data.name = name
-       data.email = email
+    import { onMount } from "svelte";
+  
+    let users = [];
+    let id, name, email;
+    let control = false;
+    let userId;
+    let jsonURL = "http://localhost:3000";
+  
+    async function addUser() {
+      if (users.length > 0) {
+        id = users[users.length - 1].id;
+      } else {
+        id = 0;
+      }
+      const obj = { id: id + 1, name, email };
+      const response = await fetch(`${jsonURL}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(obj),
+      });
+  
+      if (response.ok) {
+        getAll();
+      } else {
+        console.error("Kullanıcıyı sunucuya eklerken hata oluştu.");
+      }
     }
-   })
-   getAll()
-   }
-   function getAll(){
-    users = users
-    name = ''
-    email = ''
-    control = false
-   }
-
-   function deleteOne(id){
-    users =  users.filter((x)=>x.id != id)
-   }
-
-   function edit(id){
-    users.forEach((data)=>{
-        if(data.id == id){
-            name = data.name;
-            email = data.email;
-            control = true
-            userId = data.id
+  
+    async function editUser() {
+      const userToUpdate = users.find((data) => data.id === userId);
+      if (userToUpdate) {
+        userToUpdate.name = name;
+        userToUpdate.email = email;
+        const response = await fetch(`${jsonURL}/users/${userId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userToUpdate),
+        });
+  
+        if (response.ok) {
+          getAll();
+        } else {
+          console.error("Kullanıcıyı sunucuda güncellerken hata oluştu.");
         }
-    })
-    
-   }
-   onMount(async ()=>{
-    let apiURL = 'https://jsonplaceholder.typicode.com/users'
-    let response = await fetch(apiURL);
-     users = await response.json();
-   })
-</script>
-
+      }
+    }
+  
+    async function getAll() {
+      const response = await fetch(`${jsonURL}/users`);
+  
+      if (response.ok) {
+        const data = await response.json();
+        users = data;
+      } else {
+        console.error("Kullanıcıları sunucudan alırken hata oluştu.");
+      }
+      name = "";
+      email = "";
+      control = false;
+    }
+  
+    async function deleteOne(id) {
+      const response = await fetch(`${jsonURL}/users/${id}`, {
+        method: "DELETE",
+      });
+  
+      if (response.ok) {
+        getAll();
+      } else {
+        console.error("Kullanıcıyı sunucudan silerken hata oluştu.");
+      }
+    }
+  
+    function getByID(id) {
+      users.forEach((data) => {
+        if (data.id === id) {
+          name = data.name;
+          email = data.email;
+          control = true;
+          userId = data.id;
+        }
+      });
+    }
+  
+    onMount(async () => {
+      await getAll();
+    });
+  </script>
 
 <div class="grid-container">
    <div class="c-1">
-    <label for="" class="form-label" style="font-size: 16px; font-weight: bold; color: #333;">İsim</label>
-    <input class="form-control" bind:value={name} type="text" placeholder="İsim Girin" style="width: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; color: #555;">
+    <label for="" class="form-label" style="font-size: 16px; text-align:center; font-weight: bold; color: #333;">İsim</label>
+    <input class="form-control" bind:value={name} type="text" placeholder="İsim Girin" style="text-align:center; width: 250px; margin-left:190px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; color: #555;">
     
-    <label for="" class="form-label" style="font-size: 16px; font-weight: bold; color: #333;">Email</label>
-    <input type="text" bind:value={email} placeholder="Email Girin" style="width: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; color: #555;">    
+    <label for="" class="form-label" style="text-align:center; font-size: 16px; font-weight: bold; color: #333;">Email</label>
+    <input type="text" bind:value={email} placeholder="Email Girin" style="text-align:center; width: 250px; padding: 10px; margin-left:190px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; color: #555;">    
         <div>
             <button class="save" on:click={()=>{
                control ?  editUser(userId) : addUser()
@@ -78,7 +116,7 @@
                 <td>{user.name}</td>
                 <td>{user.email}</td>
                 <td><button class="deleteBtn" on:click={()=>{deleteOne(user.id)}}>Sil</button></td>
-                <td><button class="editBtn"  on:click={()=>{edit(user.id)}}>Düzenle</button></td>
+                <td><button class="editBtn"  on:click={()=>{getByID(user.id)}}>Düzenle</button></td>
             </tr>
             {/each}        
         </table>
@@ -110,6 +148,7 @@ button{
 } 
 .save{
     background-color: green;
+    margin-left: 270px;
 }
 .save:hover{
     text-decoration: underline;
